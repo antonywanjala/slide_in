@@ -1,0 +1,205 @@
+import csv
+import os
+from datetime import datetime, timedelta
+
+
+class Activity:
+    def __init__(self, name, start, end):
+        self.name = name
+        self.start = start
+        self.end = end
+
+
+def parse_datetime(dt_str):
+    """Helper to convert a string to a datetime object."""
+    try:
+        return datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
+    except ValueError:
+        print("Invalid format. Please use YYYY-MM-DD HH:MM.")
+        return None
+
+
+def find_available_slots(activities, search_start, search_end, duration_minutes):
+    """
+    Finds open time slots within a search window that are long enough
+    to fit the proposed activity duration.
+    """
+    relevant_activities = []
+    for act in activities:
+        if act.end > search_start and act.start < search_end:
+            relevant_activities.append(act)
+
+    relevant_activities.sort(key=lambda x: x.start)
+
+    available_slots = []
+    current_time = search_start
+    required_duration = timedelta(minutes=duration_minutes)
+
+    for act in relevant_activities:
+        if current_time < act.start:
+            gap = act.start - current_time
+            if gap >= required_duration:
+                available_slots.append((current_time, act.start))
+
+        current_time = max(current_time, act.end)
+
+    if current_time < search_end:
+        gap = search_end - current_time
+        if gap >= required_duration:
+            available_slots.append((current_time, search_end))
+
+    return available_slots
+
+
+def export_to_csv(schedule, filename="schedule.csv"):
+    """Exports the current schedule to a CSV file."""
+    if not schedule:
+        print("\nSchedule is empty. Nothing to export.")
+        return
+
+    sorted_schedule = sorted(schedule, key=lambda x: x.start)
+
+    try:
+        with open(filename, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Activity Name", "Start Time", "End Time"])
+
+            for act in sorted_schedule:
+                writer.writerow([
+                    act.name,
+                    act.start.strftime('%Y-%m-%d %H:%M'),
+                    act.end.strftime('%Y-%m-%d %H:%M')
+                ])
+        print(f"\nSuccess! Schedule exported to '{filename}'.")
+    except Exception as e:
+        print(f"\nError saving to CSV: {e}")
+
+
+def import_from_csv(filename="schedule.csv"):
+    """Imports a schedule from a CSV file."""
+    new_schedule = []
+    if not os.path.exists(filename):
+        print(f"\nError: No file named '{filename}' found in the current directory.")
+        return new_schedule
+
+    try:
+        with open(filename, mode='r', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            header = next(reader, None)  # Skip the header row
+
+            count = 0
+            for row in reader:
+                if len(row) == 3:
+                    name, start_str, end_str = row
+                    start_dt = parse_datetime(start_str)
+                    end_dt = parse_datetime(end_str)
+
+                    if start_dt and end_dt:
+                        new_schedule.append(Activity(name, start_dt, end_dt))
+                        count += 1
+            print(f"\nSuccess! Imported {count} activities from '{filename}'.")
+    except Exception as e:
+        print(f"\nError reading from CSV: {e}")
+
+    return new_schedule
+
+
+def main():
+    schedule = []
+
+    print("=== Welcome to the Activity Scheduler ===")
+
+    while True:
+        print("\nMenu:")
+        print("1. Add an existing activity")
+        print("2. Find time for a proposed activity")
+        print("3. View current schedule")
+        print("4. Export schedule to CSV")
+        print("5. Import schedule from CSV")
+        print("6. Exit")
+
+        choice = input("Select an option (1-6): ")
+
+        if choice == '1':
+            name = input("Activity Name: ")
+            start_str = input("Start Time (YYYY-MM-DD HH:MM): ")
+            start_dt = parse_datetime(start_str)
+            if not start_dt: continue
+
+            end_str = input("End Time (YYYY-MM-DD HH:MM): ")
+            end_dt = parse_datetime(end_str)
+            if not end_dt: continue
+
+            if start_dt >= end_dt:
+                print("Error: End time must be after start time.")
+                continue
+
+            schedule.append(Activity(name, start_dt, end_dt))
+            print(f"Added '{name}' to the schedule.")
+
+        elif choice == '2':
+            print("\n-- Define the window you want to search within --")
+            search_start_str = input("Search Window Start (YYYY-MM-DD HH:MM): ")
+            search_start = parse_datetime(search_start_str)
+            if not search_start: continue
+
+            search_end_str = input("Search Window End (YYYY-MM-DD HH:MM): ")
+            search_end = parse_datetime(search_end_str)
+            if not search_end: continue
+
+            duration_str = input("How many minutes does the proposed activity require? ")
+            try:
+                duration = int(duration_str)
+            except ValueError:
+                print("Please enter a valid number of minutes.")
+                continue
+
+            slots = find_available_slots(schedule, search_start, search_end, duration)
+
+            print(f"\nViable time periods for a {duration}-minute activity:")
+            if not slots:
+                print("No viable slots found in that time range.")
+            else:
+                for idx, (slot_start, slot_end) in enumerate(slots, 1):
+                    print(
+                        f"Option {idx}: {slot_start.strftime('%Y-%m-%d %H:%M')} to {slot_end.strftime('%Y-%m-%d %H:%M')}")
+
+        elif choice == '3':
+            if not schedule:
+                print("\nSchedule is currently empty.")
+            else:
+                print("\nCurrent Schedule:")
+                sorted_schedule = sorted(schedule, key=lambda x: x.start)
+                for act in sorted_schedule:
+                    print(
+                        f"- {act.name}: {act.start.strftime('%Y-%m-%d %H:%M')} to {act.end.strftime('%Y-%m-%d %H:%M')}")
+
+        elif choice == '4':
+            filename = input("Enter filename to save as (default: schedule.csv): ").strip()
+            if not filename:
+                filename = "schedule.csv"
+            elif not filename.endswith(".csv"):
+                filename += ".csv"
+            export_to_csv(schedule, filename)
+
+        elif choice == '5':
+            filename = input("Enter filename to import from (default: schedule.csv): ").strip()
+            if not filename:
+                filename = "schedule.csv"
+            elif not filename.endswith(".csv"):
+                filename += ".csv"
+
+            # Combine the current session's schedule with the imported one
+            imported_schedule = import_from_csv(filename)
+            schedule.extend(imported_schedule)
+
+        elif choice == '6':
+            print("Exiting scheduler. Goodbye!")
+            break
+
+        else:
+            print("Invalid choice. Please select a number between 1 and 6.")
+
+
+if __name__ == "__main__":
+    main()
