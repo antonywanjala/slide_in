@@ -1,6 +1,18 @@
 import csv
 import os
+import tkinter as tk
+from tkinter import messagebox, ttk, filedialog
 from datetime import datetime, timedelta
+
+# --- Modern Dark Theme Palette ---
+BG_MAIN = "#1e1e1e"  # Very dark charcoal
+BG_SURFACE = "#2d2d2d"  # Graphite for cards/inputs
+ACCENT = "#2ecc71"  # Emerald green
+ACCENT_HOVER = "#27ae60"  # Darker emerald
+TEXT_MAIN = "#e0e0e0"  # Off-white
+TEXT_DIM = "#b0b0b0"  # Muted silver
+DANGER = "#ff6b6b"  # Coral red
+BORDER = "#3f3f3f"  # Subtle borders
 
 
 class Activity:
@@ -10,196 +22,226 @@ class Activity:
         self.end = end
 
 
-def parse_datetime(dt_str):
-    """Helper to convert a string to a datetime object."""
-    try:
-        return datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
-    except ValueError:
-        print("Invalid format. Please use YYYY-MM-DD HH:MM.")
-        return None
+class SchedulerGUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Activity Scheduler Pro")
+        self.root.geometry("850x650")
+        self.root.configure(bg=BG_MAIN)
+        self.schedule = []
 
+        self.apply_styles()
+        self.setup_ui()
 
-def find_available_slots(activities, search_start, search_end, duration_minutes):
-    """
-    Finds open time slots within a search window that are long enough
-    to fit the proposed activity duration.
-    """
-    relevant_activities = []
-    for act in activities:
-        if act.end > search_start and act.start < search_end:
-            relevant_activities.append(act)
+    def apply_styles(self):
+        style = ttk.Style()
+        style.theme_use('clam')
 
-    relevant_activities.sort(key=lambda x: x.start)
+        # Treeview (The List) Styling
+        style.configure("Treeview",
+                        background=BG_SURFACE,
+                        foreground=TEXT_MAIN,
+                        fieldbackground=BG_SURFACE,
+                        rowheight=35,
+                        borderwidth=0,
+                        font=('Segoe UI', 10))
 
-    available_slots = []
-    current_time = search_start
-    required_duration = timedelta(minutes=duration_minutes)
+        style.configure("Treeview.Heading",
+                        background="#121212",
+                        foreground=ACCENT,
+                        relief="flat",
+                        font=('Segoe UI', 9, 'bold'))
 
-    for act in relevant_activities:
-        if current_time < act.start:
-            gap = act.start - current_time
-            if gap >= required_duration:
-                available_slots.append((current_time, act.start))
+        # Change selected row color
+        style.map("Treeview", background=[('selected', "#3d3d3d")], foreground=[('selected', ACCENT)])
 
-        current_time = max(current_time, act.end)
+    def setup_ui(self):
+        # --- Header ---
+        header = tk.Frame(self.root, bg="#121212", height=70)
+        header.pack(fill="x")
+        tk.Label(header, text="SCHEDULE MANAGER", bg="#121212", fg=ACCENT,
+                 font=("Impact", 20), pady=20, letterspacing=2).pack()
 
-    if current_time < search_end:
-        gap = search_end - current_time
-        if gap >= required_duration:
-            available_slots.append((current_time, search_end))
+        main_container = tk.Frame(self.root, bg=BG_MAIN, padx=25, pady=20)
+        main_container.pack(fill="both", expand=True)
 
-    return available_slots
+        # --- Input Section (Dark Card) ---
+        input_card = tk.Frame(main_container, bg=BG_SURFACE, padx=20, pady=20,
+                              highlightbackground=BORDER, highlightthickness=1)
+        input_card.pack(fill="x", pady=(0, 25))
 
+        # Helper to create dark labels
+        def dark_label(parent, text):
+            return tk.Label(parent, text=text.upper(), bg=BG_SURFACE, fg=TEXT_DIM, font=("Segoe UI", 8, "bold"))
 
-def export_to_csv(schedule, filename="schedule.csv"):
-    """Exports the current schedule to a CSV file."""
-    if not schedule:
-        print("\nSchedule is empty. Nothing to export.")
-        return
+        dark_label(input_card, "Activity Name").grid(row=0, column=0, sticky="w", padx=5)
+        self.ent_name = tk.Entry(input_card, font=("Segoe UI", 11), bg="#3d3d3d", fg="white",
+                                 insertbackground="white", relief="flat", bd=5)
+        self.ent_name.grid(row=1, column=0, padx=5, pady=(5, 15), sticky="ew")
 
-    sorted_schedule = sorted(schedule, key=lambda x: x.start)
+        dark_label(input_card, "Start Time").grid(row=0, column=1, sticky="w", padx=5)
+        self.ent_start = tk.Entry(input_card, font=("Segoe UI", 11), bg="#3d3d3d", fg="white",
+                                  insertbackground="white", relief="flat", bd=5)
+        self.ent_start.grid(row=1, column=1, padx=5, pady=(5, 15), sticky="ew")
 
-    try:
-        with open(filename, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            writer.writerow(["Activity Name", "Start Time", "End Time"])
+        dark_label(input_card, "End Time").grid(row=0, column=2, sticky="w", padx=5)
+        self.ent_end = tk.Entry(input_card, font=("Segoe UI", 11), bg="#3d3d3d", fg="white",
+                                insertbackground="white", relief="flat", bd=5)
+        self.ent_end.grid(row=1, column=2, padx=5, pady=(5, 15), sticky="ew")
 
-            for act in sorted_schedule:
-                writer.writerow([
-                    act.name,
-                    act.start.strftime('%Y-%m-%d %H:%M'),
-                    act.end.strftime('%Y-%m-%d %H:%M')
-                ])
-        print(f"\nSuccess! Schedule exported to '{filename}'.")
-    except Exception as e:
-        print(f"\nError saving to CSV: {e}")
+        input_card.columnconfigure((0, 1, 2), weight=1)
 
+        self.btn_add = tk.Button(input_card, text="ADD TO TIMELINE", command=self.add_activity,
+                                 bg=ACCENT, fg="#121212", font=("Segoe UI", 9, "bold"),
+                                 relief="flat", cursor="hand2", padx=25, pady=8)
+        self.btn_add.grid(row=2, column=0, columnspan=3, pady=(5, 0))
 
-def import_from_csv(filename="schedule.csv"):
-    """Imports a schedule from a CSV file."""
-    new_schedule = []
-    if not os.path.exists(filename):
-        print(f"\nError: No file named '{filename}' found in the current directory.")
-        return new_schedule
+        # Hover effects
+        self.btn_add.bind("<Enter>", lambda e: self.btn_add.configure(bg=ACCENT_HOVER))
+        self.btn_add.bind("<Leave>", lambda e: self.btn_add.configure(bg=ACCENT))
 
-    try:
-        with open(filename, mode='r', encoding='utf-8') as file:
-            reader = csv.reader(file)
-            header = next(reader, None)  # Skip the header row
+        # --- View Section ---
+        view_frame = tk.Frame(main_container, bg=BG_MAIN)
+        view_frame.pack(fill="both", expand=True)
 
-            count = 0
-            for row in reader:
-                if len(row) == 3:
-                    name, start_str, end_str = row
-                    start_dt = parse_datetime(start_str)
-                    end_dt = parse_datetime(end_str)
+        self.tree = ttk.Treeview(view_frame, columns=("Name", "Start", "End"), show='headings')
+        self.tree.heading("Name", text="NAME")
+        self.tree.heading("Start", text="START")
+        self.tree.heading("End", text="END")
+        self.tree.pack(side="left", fill="both", expand=True)
 
-                    if start_dt and end_dt:
-                        new_schedule.append(Activity(name, start_dt, end_dt))
-                        count += 1
-            print(f"\nSuccess! Imported {count} activities from '{filename}'.")
-    except Exception as e:
-        print(f"\nError reading from CSV: {e}")
+        # Custom scrollbar for dark mode
+        scrollbar = ttk.Scrollbar(view_frame, orient="vertical", command=self.tree.yview)
+        scrollbar.pack(side="right", fill="y")
+        self.tree.configure(yscrollcommand=scrollbar.set)
 
-    return new_schedule
+        # --- Footer Actions ---
+        action_frame = tk.Frame(self.root, bg="#121212", padx=25, pady=15)
+        action_frame.pack(fill="x")
 
+        def footer_btn(text, cmd, color=BG_SURFACE, fg=TEXT_MAIN, side="left"):
+            btn = tk.Button(action_frame, text=text, command=cmd, bg=color, fg=fg,
+                            font=("Segoe UI", 8, "bold"), relief="flat", padx=15, pady=5, cursor="hand2")
+            btn.pack(side=side, padx=5)
+            return btn
 
-def main():
-    schedule = []
+        footer_btn("FIND SLOTS", self.open_find_slots_window, color=ACCENT, fg="#121212")
+        footer_btn("IMPORT CSV", self.import_csv)
+        footer_btn("EXPORT CSV", self.export_csv)
+        footer_btn("PURGE ALL", self.clear_schedule, color=DANGER, fg="white", side="right")
 
-    print("=== Welcome to the Activity Scheduler ===")
+    # --- Logic Methods (Consistent with previous version) ---
+    def parse_dt(self, dt_str):
+        try:
+            return datetime.strptime(dt_str.strip(), "%Y-%m-%d %H:%M")
+        except ValueError:
+            return None
 
-    while True:
-        print("\nMenu:")
-        print("1. Add an existing activity")
-        print("2. Find time for a proposed activity")
-        print("3. View current schedule")
-        print("4. Export schedule to CSV")
-        print("5. Import schedule from CSV")
-        print("6. Exit")
+    def refresh_list(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        self.schedule.sort(key=lambda x: x.start)
+        for act in self.schedule:
+            self.tree.insert("", "end", values=(act.name, act.start.strftime('%Y-%m-%d %H:%M'),
+                                                act.end.strftime('%Y-%m-%d %H:%M')))
 
-        choice = input("Select an option (1-6): ")
+    def add_activity(self):
+        name = self.ent_name.get()
+        start_dt = self.parse_dt(self.ent_start.get())
+        end_dt = self.parse_dt(self.ent_end.get())
 
-        if choice == '1':
-            name = input("Activity Name: ")
-            start_str = input("Start Time (YYYY-MM-DD HH:MM): ")
-            start_dt = parse_datetime(start_str)
-            if not start_dt: continue
+        if not name or not start_dt or not end_dt:
+            messagebox.showerror("Format Error", "Required: YYYY-MM-DD HH:MM")
+            return
 
-            end_str = input("End Time (YYYY-MM-DD HH:MM): ")
-            end_dt = parse_datetime(end_str)
-            if not end_dt: continue
+        if start_dt >= end_dt:
+            messagebox.showerror("Time Error", "End must follow Start.")
+            return
 
-            if start_dt >= end_dt:
-                print("Error: End time must be after start time.")
-                continue
+        self.schedule.append(Activity(name, start_dt, end_dt))
+        self.refresh_list()
+        self.ent_name.delete(0, tk.END)
+        self.ent_start.delete(0, tk.END)
+        self.ent_end.delete(0, tk.END)
 
-            schedule.append(Activity(name, start_dt, end_dt))
-            print(f"Added '{name}' to the schedule.")
+    def open_find_slots_window(self):
+        top = tk.Toplevel(self.root)
+        top.title("Slot Finder")
+        top.geometry("400x480")
+        top.configure(bg=BG_SURFACE)
 
-        elif choice == '2':
-            print("\n-- Define the window you want to search within --")
-            search_start_str = input("Search Window Start (YYYY-MM-DD HH:MM): ")
-            search_start = parse_datetime(search_start_str)
-            if not search_start: continue
+        container = tk.Frame(top, bg=BG_SURFACE, padx=30, pady=30)
+        container.pack(fill="both", expand=True)
 
-            search_end_str = input("Search Window End (YYYY-MM-DD HH:MM): ")
-            search_end = parse_datetime(search_end_str)
-            if not search_end: continue
+        tk.Label(container, text="SEARCH PARAMETERS", bg=BG_SURFACE, fg=ACCENT, font=("Segoe UI", 10, "bold")).pack(
+            pady=(0, 20))
 
-            duration_str = input("How many minutes does the proposed activity require? ")
+        def quick_input(label_text, default):
+            tk.Label(container, text=label_text, bg=BG_SURFACE, fg=TEXT_DIM, font=("Segoe UI", 8)).pack(anchor="w")
+            e = tk.Entry(container, font=("Segoe UI", 11), bg="#3d3d3d", fg="white", relief="flat", bd=5)
+            e.insert(0, default)
+            e.pack(fill="x", pady=(0, 15))
+            return e
+
+        ent_s = quick_input("WINDOW START", datetime.now().strftime("%Y-%m-%d 09:00"))
+        ent_e = quick_input("WINDOW END", datetime.now().strftime("%Y-%m-%d 17:00"))
+        ent_d = quick_input("DURATION (MINS)", "30")
+
+        res_text = tk.Text(container, height=6, bg="#1e1e1e", fg=TEXT_MAIN, font=("Consolas", 10), bd=0, padx=10,
+                           pady=10)
+
+        def search():
+            s_dt = self.parse_dt(ent_s.get())
+            e_dt = self.parse_dt(ent_e.get())
             try:
-                duration = int(duration_str)
-            except ValueError:
-                print("Please enter a valid number of minutes.")
-                continue
+                dur = int(ent_d.get())
+            except:
+                return
 
-            slots = find_available_slots(schedule, search_start, search_end, duration)
+            relevant = sorted([a for a in self.schedule if a.end > s_dt and a.start < e_dt], key=lambda x: x.start)
+            slots, curr, req = [], s_dt, timedelta(minutes=dur)
 
-            print(f"\nViable time periods for a {duration}-minute activity:")
-            if not slots:
-                print("No viable slots found in that time range.")
-            else:
-                for idx, (slot_start, slot_end) in enumerate(slots, 1):
-                    print(
-                        f"Option {idx}: {slot_start.strftime('%Y-%m-%d %H:%M')} to {slot_end.strftime('%Y-%m-%d %H:%M')}")
+            for act in relevant:
+                if curr < act.start and (act.start - curr) >= req:
+                    slots.append((curr, act.start))
+                curr = max(curr, act.end)
+            if curr < e_dt and (e_dt - curr) >= req:
+                slots.append((curr, e_dt))
 
-        elif choice == '3':
-            if not schedule:
-                print("\nSchedule is currently empty.")
-            else:
-                print("\nCurrent Schedule:")
-                sorted_schedule = sorted(schedule, key=lambda x: x.start)
-                for act in sorted_schedule:
-                    print(
-                        f"- {act.name}: {act.start.strftime('%Y-%m-%d %H:%M')} to {act.end.strftime('%Y-%m-%d %H:%M')}")
+            res_text.delete("1.0", tk.END)
+            res_text.insert(tk.END, "\n".join([f"AVAILABLE: {s.strftime('%H:%M')} - {e.strftime('%H:%M')}" for s, e in
+                                               slots]) if slots else "No slots found.")
 
-        elif choice == '4':
-            filename = input("Enter filename to save as (default: schedule.csv): ").strip()
-            if not filename:
-                filename = "schedule.csv"
-            elif not filename.endswith(".csv"):
-                filename += ".csv"
-            export_to_csv(schedule, filename)
+        tk.Button(container, text="SCAN FOR FREE TIME", command=search, bg=ACCENT, fg="#121212",
+                  font=("Segoe UI", 9, "bold"), relief="flat", pady=10, cursor="hand2").pack(fill="x", pady=10)
+        res_text.pack(fill="both", expand=True)
 
-        elif choice == '5':
-            filename = input("Enter filename to import from (default: schedule.csv): ").strip()
-            if not filename:
-                filename = "schedule.csv"
-            elif not filename.endswith(".csv"):
-                filename += ".csv"
+    def export_csv(self):
+        file_path = filedialog.asksaveasfilename(defaultextension=".csv")
+        if file_path:
+            with open(file_path, mode='w', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                writer.writerow(["Activity", "Start", "End"])
+                for act in self.schedule:
+                    writer.writerow([act.name, act.start, act.end])
 
-            # Combine the current session's schedule with the imported one
-            imported_schedule = import_from_csv(filename)
-            schedule.extend(imported_schedule)
+    def import_csv(self):
+        file_path = filedialog.askopenfilename(filetypes=[("CSV", "*.csv")])
+        if file_path:
+            with open(file_path, mode='r') as f:
+                reader = csv.reader(f)
+                next(reader, None)
+                for row in reader:
+                    self.schedule.append(Activity(row[0], self.parse_dt(row[1]), self.parse_dt(row[2])))
+            self.refresh_list()
 
-        elif choice == '6':
-            print("Exiting scheduler. Goodbye!")
-            break
-
-        else:
-            print("Invalid choice. Please select a number between 1 and 6.")
+    def clear_schedule(self):
+        if messagebox.askyesno("Confirm Purge", "Delete all data?"):
+            self.schedule = []
+            self.refresh_list()
 
 
 if __name__ == "__main__":
-    main()
+    root = tk.Tk()
+    app = SchedulerGUI(root)
+    root.mainloop()
