@@ -1,43 +1,192 @@
+
+# ==========================================
+# STRICT RECURSIVE WRAPPER + STATE TRACKER (V6.1)
+# ==========================================
+import datetime as _dt  # ALIASED TO PREVENT COLLISION
+import sys
+import os
+import builtins  
+import csv
+
+_AD_DEBUG_ACTIVE = True
+_ORIGINAL_PRINT = builtins.print  
+
+def _reset_logs():
+    log_files = ["_DEBUG_ONLY.txt", "_SCRIPT_ONLY.txt", "_COMBINED_LOG.txt"]
+    for f_name in log_files:
+        try:
+            with open(f_name, "w", encoding="utf-8") as f:
+                f.write(f"--- SESSION START: {_dt.datetime.now()} ---\n")
+        except: pass
+
+    # Initialize the Variable Tracker CSV
+    try:
+        with open("_VARIABLE_TRACKER.csv", "w", encoding="utf-8", newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(["Line", "Variable", "Value"])
+    except: pass
+
+if not hasattr(builtins, '_AD_LOGS_WIPED'):
+    _reset_logs()
+    builtins._AD_LOGS_WIPED = True
+
+def _record_state(line_no, local_vars):
+    if not _AD_DEBUG_ACTIVE: return
+    try:
+        with open("_VARIABLE_TRACKER.csv", "a", encoding="utf-8", newline='') as f:
+            writer = csv.writer(f)
+            for var_name, var_val in local_vars.items():
+                if var_name.startswith('_'): continue 
+                clean_val = str(var_val).replace('\n', ' ').replace('\r', '')
+                writer.writerow([line_no, var_name, clean_val])
+    except: pass
+
+def _ad_script_output(msg, is_error=True):
+    if not _AD_DEBUG_ACTIVE: return
+    # Use the aliased _dt to avoid collisions with 'import datetime' or 'from datetime import datetime'
+    timestamp = _dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    formatted = f"[DEBUG_ERROR] [{timestamp}] {msg}" if is_error else f"[SCRIPT] {msg}"
+    _ORIGINAL_PRINT(formatted)
+
+    target = ["_DEBUG_ONLY.txt", "_COMBINED_LOG.txt"] if is_error else ["_SCRIPT_ONLY.txt", "_COMBINED_LOG.txt"]
+    for f_name in target:
+        try:
+            with open(f_name, "a", encoding="utf-8") as f: f.write(formatted + "\n")
+        except: pass
+
+def print(*args, **kwargs):
+    output = " ".join(map(str, args))
+    _ad_script_output(output, is_error=False)
+# ==========================================
+
 import csv
 import os
 import tkinter as tk
 from tkinter import messagebox, ttk, filedialog
 from datetime import datetime, timedelta
 
-# --- Modern Dark Theme Palette ---
-BG_MAIN = "#1e1e1e"  # Very dark charcoal
-BG_SURFACE = "#2d2d2d"  # Graphite for cards/inputs
-ACCENT = "#2ecc71"  # Emerald green
-ACCENT_HOVER = "#27ae60"  # Darker emerald
-TEXT_MAIN = "#e0e0e0"  # Off-white
-TEXT_DIM = "#b0b0b0"  # Muted silver
-DANGER = "#ff6b6b"  # Coral red
-BORDER = "#3f3f3f"  # Subtle borders
+
+try:
+    BG_MAIN = "#1e1e1e"
+    _record_state(8, locals())
+except Exception as e:
+    _ad_script_output(f'Line 8 Failed: {e}', is_error=True)
+try:
+    BG_SURFACE = "#2d2d2d"
+    _record_state(9, locals())
+except Exception as e:
+    _ad_script_output(f'Line 9 Failed: {e}', is_error=True)
+try:
+    ACCENT = "#2ecc71"
+    _record_state(10, locals())
+except Exception as e:
+    _ad_script_output(f'Line 10 Failed: {e}', is_error=True)
+try:
+    ACCENT_HOVER = "#27ae60"
+    _record_state(11, locals())
+except Exception as e:
+    _ad_script_output(f'Line 11 Failed: {e}', is_error=True)
+try:
+    TEXT_MAIN = "#e0e0e0"
+    _record_state(12, locals())
+except Exception as e:
+    _ad_script_output(f'Line 12 Failed: {e}', is_error=True)
+try:
+    TEXT_DIM = "#b0b0b0"
+    _record_state(13, locals())
+except Exception as e:
+    _ad_script_output(f'Line 13 Failed: {e}', is_error=True)
+try:
+    DANGER = "#ff6b6b"
+    _record_state(14, locals())
+except Exception as e:
+    _ad_script_output(f'Line 14 Failed: {e}', is_error=True)
+try:
+    BORDER = "#3f3f3f"
+    _record_state(15, locals())
+except Exception as e:
+    _ad_script_output(f'Line 15 Failed: {e}', is_error=True)
 
 
 class Activity:
-    def __init__(self, name, start, end):
-        self.name = name
-        self.start = start
-        self.end = end
+    def __init__(self, name, act_type, start, end):
+        try:
+            self.name = name
+            _record_state(20, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 20 Failed: {e}', is_error=True)
+        try:
+            self.act_type = act_type
+            _record_state(21, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 21 Failed: {e}', is_error=True)
+        try:
+            self.start = start
+            _record_state(22, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 22 Failed: {e}', is_error=True)
+        try:
+            self.end = end
+            _record_state(23, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 23 Failed: {e}', is_error=True)
 
 
 class SchedulerGUI:
     def __init__(self, root):
-        self.root = root
-        self.root.title("Activity Scheduler Pro")
-        self.root.geometry("850x650")
-        self.root.configure(bg=BG_MAIN)
-        self.schedule = []
+        try:
+            self.root = root
+            _record_state(28, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 28 Failed: {e}', is_error=True)
+        try:
+            self.root.title("Activity Scheduler Pro")
+            _record_state(29, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 29 Failed: {e}', is_error=True)
+        try:
+            self.root.geometry("950x750")
+            _record_state(30, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 30 Failed: {e}', is_error=True)
+        try:
+            self.root.minsize(800, 600)
+            _record_state(31, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 31 Failed: {e}', is_error=True)
+        try:
+            self.root.configure(bg=BG_MAIN)
+            _record_state(32, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 32 Failed: {e}', is_error=True)
+        try:
+            self.schedule = []
+            _record_state(33, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 33 Failed: {e}', is_error=True)
 
-        self.apply_styles()
-        self.setup_ui()
+        try:
+            self.apply_styles()
+            _record_state(35, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 35 Failed: {e}', is_error=True)
+        try:
+            self.setup_ui()
+            _record_state(36, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 36 Failed: {e}', is_error=True)
 
     def apply_styles(self):
-        style = ttk.Style()
-        style.theme_use('clam')
-
-        # Treeview (The List) Styling
+        try:
+            style = ttk.Style()
+            _record_state(39, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 39 Failed: {e}', is_error=True)
+        try:
+            style.theme_use('clam')
+            _record_state(40, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 40 Failed: {e}', is_error=True)
         style.configure("Treeview",
                         background=BG_SURFACE,
                         foreground=TEXT_MAIN,
@@ -45,203 +194,655 @@ class SchedulerGUI:
                         rowheight=35,
                         borderwidth=0,
                         font=('Segoe UI', 10))
-
         style.configure("Treeview.Heading",
                         background="#121212",
                         foreground=ACCENT,
                         relief="flat",
                         font=('Segoe UI', 9, 'bold'))
+        try:
+            style.map("Treeview", background=[('selected', "#3d3d3d")], foreground=[('selected', ACCENT)])
+            _record_state(53, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 53 Failed: {e}', is_error=True)
 
-        # Change selected row color
-        style.map("Treeview", background=[('selected', "#3d3d3d")], foreground=[('selected', ACCENT)])
+        
+        try:
+            style.configure("TCombobox", fieldbackground="#3d3d3d", background=BG_SURFACE, foreground="white")
+            _record_state(56, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 56 Failed: {e}', is_error=True)
 
     def setup_ui(self):
-        # --- Header ---
-        header = tk.Frame(self.root, bg="#121212", height=70)
-        header.pack(fill="x")
-        tk.Label(header, text="SCHEDULE MANAGER", bg="#121212", fg=ACCENT,
-                 font=("Impact", 20), pady=20, letterspacing=2).pack()
+        
+        try:
+            header = tk.Frame(self.root, bg="#121212")
+            _record_state(60, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 60 Failed: {e}', is_error=True)
+        try:
+            header.pack(fill="x")
+            _record_state(61, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 61 Failed: {e}', is_error=True)
+        tk.Label(header, text="S C H E D U L E   M A N A G E R", bg="#121212", fg=ACCENT,
+                 font=("Impact", 20), pady=15).pack()
 
-        main_container = tk.Frame(self.root, bg=BG_MAIN, padx=25, pady=20)
-        main_container.pack(fill="both", expand=True)
+        
+        try:
+            canvas = tk.Canvas(self.root, bg=BG_MAIN, highlightthickness=0)
+            _record_state(66, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 66 Failed: {e}', is_error=True)
+        try:
+            scrollbar_v = ttk.Scrollbar(self.root, orient="vertical", command=canvas.yview)
+            _record_state(67, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 67 Failed: {e}', is_error=True)
+        try:
+            self.scrollable_frame = tk.Frame(canvas, bg=BG_MAIN)
+            _record_state(68, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 68 Failed: {e}', is_error=True)
 
-        # --- Input Section (Dark Card) ---
-        input_card = tk.Frame(main_container, bg=BG_SURFACE, padx=20, pady=20,
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        try:
+            canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw", width=950)
+            _record_state(75, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 75 Failed: {e}', is_error=True)
+        try:
+            canvas.configure(yscrollcommand=scrollbar_v.set)
+            _record_state(76, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 76 Failed: {e}', is_error=True)
+
+        try:
+            canvas.pack(side="left", fill="both", expand=True, padx=20, pady=10)
+            _record_state(78, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 78 Failed: {e}', is_error=True)
+        try:
+            scrollbar_v.pack(side="right", fill="y")
+            _record_state(79, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 79 Failed: {e}', is_error=True)
+
+        
+        input_card = tk.Frame(self.scrollable_frame, bg=BG_SURFACE, padx=15, pady=15,
                               highlightbackground=BORDER, highlightthickness=1)
-        input_card.pack(fill="x", pady=(0, 25))
+        try:
+            input_card.pack(fill="x", pady=10)
+            _record_state(84, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 84 Failed: {e}', is_error=True)
 
-        # Helper to create dark labels
         def dark_label(parent, text):
-            return tk.Label(parent, text=text.upper(), bg=BG_SURFACE, fg=TEXT_DIM, font=("Segoe UI", 8, "bold"))
+            try:
+                return tk.Label(parent, text=text.upper(), bg=BG_SURFACE, fg=TEXT_DIM, font=("Segoe UI", 8, "bold"))
+                _record_state(87, locals())
+            except Exception as e:
+                _ad_script_output(f'Line 87 Failed: {e}', is_error=True)
 
-        dark_label(input_card, "Activity Name").grid(row=0, column=0, sticky="w", padx=5)
-        self.ent_name = tk.Entry(input_card, font=("Segoe UI", 11), bg="#3d3d3d", fg="white",
-                                 insertbackground="white", relief="flat", bd=5)
-        self.ent_name.grid(row=1, column=0, padx=5, pady=(5, 15), sticky="ew")
+        
+        try:
+            f1 = tk.Frame(input_card, bg=BG_SURFACE)
+            _record_state(90, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 90 Failed: {e}', is_error=True)
+        try:
+            f1.pack(fill="x")
+            _record_state(91, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 91 Failed: {e}', is_error=True)
 
-        dark_label(input_card, "Start Time").grid(row=0, column=1, sticky="w", padx=5)
-        self.ent_start = tk.Entry(input_card, font=("Segoe UI", 11), bg="#3d3d3d", fg="white",
-                                  insertbackground="white", relief="flat", bd=5)
-        self.ent_start.grid(row=1, column=1, padx=5, pady=(5, 15), sticky="ew")
+        try:
+            dark_label(f1, "Activity Name").pack(side="left", padx=5)
+            _record_state(93, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 93 Failed: {e}', is_error=True)
+        try:
+            self.ent_name = tk.Entry(f1, font=("Segoe UI", 11), bg="#3d3d3d", fg="white", bd=5, relief="flat")
+            _record_state(94, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 94 Failed: {e}', is_error=True)
+        try:
+            self.ent_name.pack(side="left", expand=True, fill="x", padx=5, pady=5)
+            _record_state(95, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 95 Failed: {e}', is_error=True)
 
-        dark_label(input_card, "End Time").grid(row=0, column=2, sticky="w", padx=5)
-        self.ent_end = tk.Entry(input_card, font=("Segoe UI", 11), bg="#3d3d3d", fg="white",
-                                insertbackground="white", relief="flat", bd=5)
-        self.ent_end.grid(row=1, column=2, padx=5, pady=(5, 15), sticky="ew")
+        try:
+            dark_label(f1, "Type (e.g. Work)").pack(side="left", padx=5)
+            _record_state(97, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 97 Failed: {e}', is_error=True)
+        try:
+            self.ent_type = tk.Entry(f1, font=("Segoe UI", 11), bg="#3d3d3d", fg="white", bd=5, relief="flat")
+            _record_state(98, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 98 Failed: {e}', is_error=True)
+        try:
+            self.ent_type.pack(side="left", expand=True, fill="x", padx=5, pady=5)
+            _record_state(99, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 99 Failed: {e}', is_error=True)
 
-        input_card.columnconfigure((0, 1, 2), weight=1)
+        
+        try:
+            f2 = tk.Frame(input_card, bg=BG_SURFACE)
+            _record_state(102, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 102 Failed: {e}', is_error=True)
+        try:
+            f2.pack(fill="x", pady=10)
+            _record_state(103, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 103 Failed: {e}', is_error=True)
+
+        try:
+            dark_label(f2, "Start (YYYY-MM-DD HH:MM)").pack(side="left", padx=5)
+            _record_state(105, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 105 Failed: {e}', is_error=True)
+        try:
+            self.ent_start = tk.Entry(f2, font=("Segoe UI", 11), bg="#3d3d3d", fg="white", bd=5, relief="flat")
+            _record_state(106, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 106 Failed: {e}', is_error=True)
+        try:
+            self.ent_start.pack(side="left", expand=True, fill="x", padx=5)
+            _record_state(107, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 107 Failed: {e}', is_error=True)
+
+        try:
+            dark_label(f2, "End (YYYY-MM-DD HH:MM)").pack(side="left", padx=5)
+            _record_state(109, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 109 Failed: {e}', is_error=True)
+        try:
+            self.ent_end = tk.Entry(f2, font=("Segoe UI", 11), bg="#3d3d3d", fg="white", bd=5, relief="flat")
+            _record_state(110, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 110 Failed: {e}', is_error=True)
+        try:
+            self.ent_end.pack(side="left", expand=True, fill="x", padx=5)
+            _record_state(111, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 111 Failed: {e}', is_error=True)
 
         self.btn_add = tk.Button(input_card, text="ADD TO TIMELINE", command=self.add_activity,
                                  bg=ACCENT, fg="#121212", font=("Segoe UI", 9, "bold"),
-                                 relief="flat", cursor="hand2", padx=25, pady=8)
-        self.btn_add.grid(row=2, column=0, columnspan=3, pady=(5, 0))
+                                 relief="flat", cursor="hand2", pady=8)
+        try:
+            self.btn_add.pack(fill="x", pady=(10, 0))
+            _record_state(116, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 116 Failed: {e}', is_error=True)
 
-        # Hover effects
-        self.btn_add.bind("<Enter>", lambda e: self.btn_add.configure(bg=ACCENT_HOVER))
-        self.btn_add.bind("<Leave>", lambda e: self.btn_add.configure(bg=ACCENT))
+        
+        try:
+            filter_frame = tk.Frame(self.scrollable_frame, bg=BG_MAIN)
+            _record_state(119, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 119 Failed: {e}', is_error=True)
+        try:
+            filter_frame.pack(fill="x", pady=(15, 0))
+            _record_state(120, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 120 Failed: {e}', is_error=True)
 
-        # --- View Section ---
-        view_frame = tk.Frame(main_container, bg=BG_MAIN)
-        view_frame.pack(fill="both", expand=True)
+        try:
+            dark_label(filter_frame, "Filter by Type:").pack(side="left", padx=5)
+            _record_state(122, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 122 Failed: {e}', is_error=True)
 
-        self.tree = ttk.Treeview(view_frame, columns=("Name", "Start", "End"), show='headings')
-        self.tree.heading("Name", text="NAME")
-        self.tree.heading("Start", text="START")
-        self.tree.heading("End", text="END")
-        self.tree.pack(side="left", fill="both", expand=True)
+        try:
+            self.filter_var = tk.StringVar(value="All")
+            _record_state(124, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 124 Failed: {e}', is_error=True)
+        self.combo_filter = ttk.Combobox(filter_frame, textvariable=self.filter_var, state="readonly",
+                                         font=("Segoe UI", 10), width=20)
+        try:
+            self.combo_filter.pack(side="left", padx=5)
+            _record_state(127, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 127 Failed: {e}', is_error=True)
+        try:
+            self.combo_filter.bind("<<ComboboxSelected>>", lambda e: self.refresh_list())
+            _record_state(128, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 128 Failed: {e}', is_error=True)
 
-        # Custom scrollbar for dark mode
-        scrollbar = ttk.Scrollbar(view_frame, orient="vertical", command=self.tree.yview)
-        scrollbar.pack(side="right", fill="y")
-        self.tree.configure(yscrollcommand=scrollbar.set)
+        tk.Button(filter_frame, text="CLEAR FILTER", command=self.clear_filter, bg=BG_SURFACE, fg=TEXT_MAIN,
+                  font=("Segoe UI", 8, "bold"), relief="flat", cursor="hand2", padx=10).pack(side="left", padx=10)
 
-        # --- Footer Actions ---
-        action_frame = tk.Frame(self.root, bg="#121212", padx=25, pady=15)
-        action_frame.pack(fill="x")
+        
+        self.tree = ttk.Treeview(self.scrollable_frame, columns=("Name", "Type", "Start", "End"), show='headings',
+                                 height=10)
+        try:
+            self.tree.heading("Name", text="ACTIVITY")
+            _record_state(136, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 136 Failed: {e}', is_error=True)
+        try:
+            self.tree.heading("Type", text="TYPE")
+            _record_state(137, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 137 Failed: {e}', is_error=True)
+        try:
+            self.tree.heading("Start", text="START TIME")
+            _record_state(138, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 138 Failed: {e}', is_error=True)
+        try:
+            self.tree.heading("End", text="END TIME")
+            _record_state(139, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 139 Failed: {e}', is_error=True)
+        try:
+            self.tree.pack(fill="both", expand=True, pady=10)
+            _record_state(140, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 140 Failed: {e}', is_error=True)
 
-        def footer_btn(text, cmd, color=BG_SURFACE, fg=TEXT_MAIN, side="left"):
-            btn = tk.Button(action_frame, text=text, command=cmd, bg=color, fg=fg,
-                            font=("Segoe UI", 8, "bold"), relief="flat", padx=15, pady=5, cursor="hand2")
-            btn.pack(side=side, padx=5)
-            return btn
+        
+        try:
+            footer = tk.Frame(self.root, bg="#121212", padx=20, pady=10)
+            _record_state(143, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 143 Failed: {e}', is_error=True)
+        try:
+            footer.pack(fill="x", side="bottom")
+            _record_state(144, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 144 Failed: {e}', is_error=True)
 
-        footer_btn("FIND SLOTS", self.open_find_slots_window, color=ACCENT, fg="#121212")
-        footer_btn("IMPORT CSV", self.import_csv)
-        footer_btn("EXPORT CSV", self.export_csv)
-        footer_btn("PURGE ALL", self.clear_schedule, color=DANGER, fg="white", side="right")
+        tk.Button(footer, text="FIND SLOTS", command=self.open_find_slots_window, bg=ACCENT,
+                  font=("Segoe UI", 8, "bold")).pack(side="left", padx=5)
+        tk.Button(footer, text="IMPORT CSV", command=self.import_csv, bg=BG_SURFACE, fg=TEXT_MAIN).pack(side="left",
+                                                                                                        padx=5)
+        tk.Button(footer, text="EXPORT CSV", command=self.export_csv, bg=BG_SURFACE, fg=TEXT_MAIN).pack(side="left",
+                                                                                                        padx=5)
+        tk.Button(footer, text="PURGE ALL", command=self.clear_schedule, bg=DANGER, fg="white").pack(side="right",
+                                                                                                     padx=5)
 
-    # --- Logic Methods (Consistent with previous version) ---
     def parse_dt(self, dt_str):
         try:
-            return datetime.strptime(dt_str.strip(), "%Y-%m-%d %H:%M")
-        except ValueError:
-            return None
+            try:
+                return datetime.strptime(dt_str.strip(), "%Y-%m-%d %H:%M")
+                _record_state(157, locals())
+            except Exception as e:
+                _ad_script_output(f'Line 157 Failed: {e}', is_error=True)
+        except:
+            try:
+                return None
+                _record_state(159, locals())
+            except Exception as e:
+                _ad_script_output(f'Line 159 Failed: {e}', is_error=True)
 
-    def refresh_list(self):
-        for item in self.tree.get_children():
-            self.tree.delete(item)
-        self.schedule.sort(key=lambda x: x.start)
-        for act in self.schedule:
-            self.tree.insert("", "end", values=(act.name, act.start.strftime('%Y-%m-%d %H:%M'),
-                                                act.end.strftime('%Y-%m-%d %H:%M')))
+    def check_overlap(self, start, end):
+        try:
+            overlaps = [a for a in self.schedule if (start < a.end and end > a.start)]
+            _record_state(162, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 162 Failed: {e}', is_error=True)
+        try:
+            return overlaps
+            _record_state(163, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 163 Failed: {e}', is_error=True)
 
     def add_activity(self):
-        name = self.ent_name.get()
-        start_dt = self.parse_dt(self.ent_start.get())
-        end_dt = self.parse_dt(self.ent_end.get())
+        try:
+            name, act_type = self.ent_name.get(), self.ent_type.get()
+            _record_state(166, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 166 Failed: {e}', is_error=True)
+        try:
+            start_dt, end_dt = self.parse_dt(self.ent_start.get()), self.parse_dt(self.ent_end.get())
+            _record_state(167, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 167 Failed: {e}', is_error=True)
 
-        if not name or not start_dt or not end_dt:
-            messagebox.showerror("Format Error", "Required: YYYY-MM-DD HH:MM")
-            return
+        if not all([name, act_type, start_dt, end_dt]):
+            try:
+                messagebox.showerror("Error", "All fields required. Format: YYYY-MM-DD HH:MM")
+                _record_state(170, locals())
+            except Exception as e:
+                _ad_script_output(f'Line 170 Failed: {e}', is_error=True)
+            try:
+                return
+                _record_state(171, locals())
+            except Exception as e:
+                _ad_script_output(f'Line 171 Failed: {e}', is_error=True)
 
         if start_dt >= end_dt:
-            messagebox.showerror("Time Error", "End must follow Start.")
-            return
+            try:
+                messagebox.showerror("Error", "End time must be after start time.")
+                _record_state(174, locals())
+            except Exception as e:
+                _ad_script_output(f'Line 174 Failed: {e}', is_error=True)
+            try:
+                return
+                _record_state(175, locals())
+            except Exception as e:
+                _ad_script_output(f'Line 175 Failed: {e}', is_error=True)
 
-        self.schedule.append(Activity(name, start_dt, end_dt))
-        self.refresh_list()
-        self.ent_name.delete(0, tk.END)
-        self.ent_start.delete(0, tk.END)
-        self.ent_end.delete(0, tk.END)
+        
+        try:
+            overlaps = self.check_overlap(start_dt, end_dt)
+            _record_state(178, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 178 Failed: {e}', is_error=True)
+        if overlaps:
+            try:
+                overlap_names = ", ".join([a.name for a in overlaps])
+                _record_state(180, locals())
+            except Exception as e:
+                _ad_script_output(f'Line 180 Failed: {e}', is_error=True)
+            
+            confirm = messagebox.askyesno("Conflict Detected",
+                                          f"This overlaps with: {overlap_names}.\n\nAllow multiple tasks at this time?")
+            if not confirm:
+                return
+
+        try:
+            self.schedule.append(Activity(name, act_type, start_dt, end_dt))
+            _record_state(187, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 187 Failed: {e}', is_error=True)
+        try:
+            self.refresh_list()
+            _record_state(188, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 188 Failed: {e}', is_error=True)
+        for e in [self.ent_name, self.ent_type, self.ent_start, self.ent_end]: e.delete(0, tk.END)
+
+    def update_filter_dropdown(self):
+        
+        try:
+            unique_types = sorted(list(set(act.act_type for act in self.schedule)))
+            _record_state(193, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 193 Failed: {e}', is_error=True)
+        try:
+            self.combo_filter['values'] = ["All"] + unique_types
+            _record_state(194, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 194 Failed: {e}', is_error=True)
+
+    def clear_filter(self):
+        try:
+            self.filter_var.set("All")
+            _record_state(197, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 197 Failed: {e}', is_error=True)
+        try:
+            self.refresh_list()
+            _record_state(198, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 198 Failed: {e}', is_error=True)
+
+    def refresh_list(self):
+        
+        try:
+            self.update_filter_dropdown()
+            _record_state(202, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 202 Failed: {e}', is_error=True)
+
+        
+        for item in self.tree.get_children(): self.tree.delete(item)
+
+        try:
+            self.schedule.sort(key=lambda x: x.start)
+            _record_state(207, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 207 Failed: {e}', is_error=True)
+
+        
+        try:
+            current_filter = self.filter_var.get()
+            _record_state(210, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 210 Failed: {e}', is_error=True)
+
+        for act in self.schedule:
+            if current_filter == "All" or act.act_type == current_filter:
+                self.tree.insert("", "end", values=(act.name, act.act_type,
+                                                    act.start.strftime('%m/%d/%Y %H:%M'),
+                                                    act.end.strftime('%m/%d/%Y %H:%M')))
 
     def open_find_slots_window(self):
-        top = tk.Toplevel(self.root)
-        top.title("Slot Finder")
-        top.geometry("400x480")
-        top.configure(bg=BG_SURFACE)
+        try:
+            top = tk.Toplevel(self.root)
+            _record_state(219, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 219 Failed: {e}', is_error=True)
+        try:
+            top.title("Free Slot Finder")
+            _record_state(220, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 220 Failed: {e}', is_error=True)
+        try:
+            top.geometry("500x550")
+            _record_state(221, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 221 Failed: {e}', is_error=True)
+        try:
+            top.configure(bg=BG_SURFACE)
+            _record_state(222, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 222 Failed: {e}', is_error=True)
 
-        container = tk.Frame(top, bg=BG_SURFACE, padx=30, pady=30)
-        container.pack(fill="both", expand=True)
+        try:
+            container = tk.Frame(top, bg=BG_SURFACE, padx=20, pady=20)
+            _record_state(224, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 224 Failed: {e}', is_error=True)
+        try:
+            container.pack(fill="both", expand=True)
+            _record_state(225, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 225 Failed: {e}', is_error=True)
 
-        tk.Label(container, text="SEARCH PARAMETERS", bg=BG_SURFACE, fg=ACCENT, font=("Segoe UI", 10, "bold")).pack(
-            pady=(0, 20))
+        tk.Label(container, text="SPECIFY SEARCH WINDOW", bg=BG_SURFACE, fg=ACCENT, font=("Segoe UI", 10, "bold")).pack(
+            pady=10)
 
-        def quick_input(label_text, default):
-            tk.Label(container, text=label_text, bg=BG_SURFACE, fg=TEXT_DIM, font=("Segoe UI", 8)).pack(anchor="w")
-            e = tk.Entry(container, font=("Segoe UI", 11), bg="#3d3d3d", fg="white", relief="flat", bd=5)
-            e.insert(0, default)
-            e.pack(fill="x", pady=(0, 15))
-            return e
+        try:
+            now_str = datetime.now().strftime("%Y-%m-%d")
+            _record_state(230, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 230 Failed: {e}', is_error=True)
+        try:
+            tk.Label(container, text="START (YYYY-MM-DD HH:MM)", bg=BG_SURFACE, fg=TEXT_DIM).pack()
+            _record_state(231, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 231 Failed: {e}', is_error=True)
+        try:
+            ent_s = tk.Entry(container, font=("Segoe UI", 11));
+            _record_state(232, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 232 Failed: {e}', is_error=True)
+        try:
+            ent_s.insert(0, f"{now_str} 09:00");
+            _record_state(233, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 233 Failed: {e}', is_error=True)
+        try:
+            ent_s.pack(pady=5)
+            _record_state(234, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 234 Failed: {e}', is_error=True)
 
-        ent_s = quick_input("WINDOW START", datetime.now().strftime("%Y-%m-%d 09:00"))
-        ent_e = quick_input("WINDOW END", datetime.now().strftime("%Y-%m-%d 17:00"))
-        ent_d = quick_input("DURATION (MINS)", "30")
+        try:
+            tk.Label(container, text="END (YYYY-MM-DD HH:MM)", bg=BG_SURFACE, fg=TEXT_DIM).pack()
+            _record_state(236, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 236 Failed: {e}', is_error=True)
+        try:
+            ent_e = tk.Entry(container, font=("Segoe UI", 11));
+            _record_state(237, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 237 Failed: {e}', is_error=True)
+        try:
+            ent_e.insert(0, f"{now_str} 17:00");
+            _record_state(238, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 238 Failed: {e}', is_error=True)
+        try:
+            ent_e.pack(pady=5)
+            _record_state(239, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 239 Failed: {e}', is_error=True)
 
-        res_text = tk.Text(container, height=6, bg="#1e1e1e", fg=TEXT_MAIN, font=("Consolas", 10), bd=0, padx=10,
-                           pady=10)
+        try:
+            tk.Label(container, text="MIN DURATION (MINS)", bg=BG_SURFACE, fg=TEXT_DIM).pack()
+            _record_state(241, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 241 Failed: {e}', is_error=True)
+        try:
+            ent_d = tk.Entry(container, font=("Segoe UI", 11));
+            _record_state(242, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 242 Failed: {e}', is_error=True)
+        try:
+            ent_d.insert(0, "30");
+            _record_state(243, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 243 Failed: {e}', is_error=True)
+        try:
+            ent_d.pack(pady=5)
+            _record_state(244, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 244 Failed: {e}', is_error=True)
+
+        try:
+            res_text = tk.Text(container, height=10, bg="#1e1e1e", fg=TEXT_MAIN, font=("Consolas", 9), padx=10, pady=10)
+            _record_state(246, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 246 Failed: {e}', is_error=True)
 
         def search():
-            s_dt = self.parse_dt(ent_s.get())
-            e_dt = self.parse_dt(ent_e.get())
             try:
-                dur = int(ent_d.get())
+                s_dt, e_dt = self.parse_dt(ent_s.get()), self.parse_dt(ent_e.get())
+                _record_state(249, locals())
+            except Exception as e:
+                _ad_script_output(f'Line 249 Failed: {e}', is_error=True)
+            try:
+                dur = timedelta(minutes=int(ent_d.get()))
             except:
                 return
 
-            relevant = sorted([a for a in self.schedule if a.end > s_dt and a.start < e_dt], key=lambda x: x.start)
-            slots, curr, req = [], s_dt, timedelta(minutes=dur)
+            if not s_dt or not e_dt: return
 
-            for act in relevant:
-                if curr < act.start and (act.start - curr) >= req:
+            try:
+                busy = sorted([a for a in self.schedule if a.end > s_dt and a.start < e_dt], key=lambda x: x.start)
+                _record_state(257, locals())
+            except Exception as e:
+                _ad_script_output(f'Line 257 Failed: {e}', is_error=True)
+            try:
+                slots, curr = [], s_dt
+                _record_state(258, locals())
+            except Exception as e:
+                _ad_script_output(f'Line 258 Failed: {e}', is_error=True)
+
+            for act in busy:
+                if curr < act.start and (act.start - curr) >= dur:
                     slots.append((curr, act.start))
                 curr = max(curr, act.end)
-            if curr < e_dt and (e_dt - curr) >= req:
+
+            if curr < e_dt and (e_dt - curr) >= dur:
                 slots.append((curr, e_dt))
 
-            res_text.delete("1.0", tk.END)
-            res_text.insert(tk.END, "\n".join([f"AVAILABLE: {s.strftime('%H:%M')} - {e.strftime('%H:%M')}" for s, e in
-                                               slots]) if slots else "No slots found.")
+            try:
+                res_text.delete("1.0", tk.END)
+                _record_state(268, locals())
+            except Exception as e:
+                _ad_script_output(f'Line 268 Failed: {e}', is_error=True)
+            if not slots:
+                res_text.insert(tk.END, "No free slots found.")
+            else:
+                for s, e in slots:
+                    res_text.insert(tk.END, f"FREE: {s.strftime('%m/%d/%Y %H:%M')} TO {e.strftime('%m/%d/%Y %H:%M')}\n")
 
-        tk.Button(container, text="SCAN FOR FREE TIME", command=search, bg=ACCENT, fg="#121212",
-                  font=("Segoe UI", 9, "bold"), relief="flat", pady=10, cursor="hand2").pack(fill="x", pady=10)
-        res_text.pack(fill="both", expand=True)
+        try:
+            tk.Button(container, text="SCAN FOR SLOTS", command=search, bg=ACCENT, pady=5).pack(fill="x", pady=10)
+            _record_state(275, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 275 Failed: {e}', is_error=True)
+        try:
+            res_text.pack(fill="both", expand=True)
+            _record_state(276, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 276 Failed: {e}', is_error=True)
 
     def export_csv(self):
-        file_path = filedialog.asksaveasfilename(defaultextension=".csv")
-        if file_path:
-            with open(file_path, mode='w', newline='', encoding='utf-8') as f:
+        try:
+            path = filedialog.asksaveasfilename(defaultextension=".csv")
+            _record_state(279, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 279 Failed: {e}', is_error=True)
+        if path:
+            with open(path, 'w', newline='') as f:
                 writer = csv.writer(f)
-                writer.writerow(["Activity", "Start", "End"])
-                for act in self.schedule:
-                    writer.writerow([act.name, act.start, act.end])
+                writer.writerow(["Name", "Type", "Start", "End"])
+                for a in self.schedule:
+                    writer.writerow(
+                        [a.name, a.act_type, a.start.strftime('%Y-%m-%d %H:%M'), a.end.strftime('%Y-%m-%d %H:%M')])
 
     def import_csv(self):
-        file_path = filedialog.askopenfilename(filetypes=[("CSV", "*.csv")])
-        if file_path:
-            with open(file_path, mode='r') as f:
-                reader = csv.reader(f)
-                next(reader, None)
-                for row in reader:
-                    self.schedule.append(Activity(row[0], self.parse_dt(row[1]), self.parse_dt(row[2])))
-            self.refresh_list()
+        try:
+            path = filedialog.askopenfilename(filetypes=[("CSV", "*.csv")])
+            _record_state(289, locals())
+        except Exception as e:
+            _ad_script_output(f'Line 289 Failed: {e}', is_error=True)
+        if path:
+            try:
+                with open(path, 'r') as f:
+                    reader = csv.reader(f)
+                    next(reader)
+                    for r in reader:
+                        if len(r) >= 4:
+                            self.schedule.append(Activity(r[0], r[1], self.parse_dt(r[2]), self.parse_dt(r[3])))
+                self.refresh_list()
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed: {e}")
 
     def clear_schedule(self):
-        if messagebox.askyesno("Confirm Purge", "Delete all data?"):
-            self.schedule = []
-            self.refresh_list()
+        if messagebox.askyesno("Confirm", "Purge all activities?"):
+            try:
+                self.schedule = []
+                _record_state(304, locals())
+            except Exception as e:
+                _ad_script_output(f'Line 304 Failed: {e}', is_error=True)
+            try:
+                self.refresh_list()
+                _record_state(305, locals())
+            except Exception as e:
+                _ad_script_output(f'Line 305 Failed: {e}', is_error=True)
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = SchedulerGUI(root)
-    root.mainloop()
+    try:
+        root = tk.Tk()
+        _record_state(309, locals())
+    except Exception as e:
+        _ad_script_output(f'Line 309 Failed: {e}', is_error=True)
+    try:
+        app = SchedulerGUI(root)
+        _record_state(310, locals())
+    except Exception as e:
+        _ad_script_output(f'Line 310 Failed: {e}', is_error=True)
+    try:
+        root.mainloop()
+        _record_state(311, locals())
+    except Exception as e:
+        _ad_script_output(f'Line 311 Failed: {e}', is_error=True)
